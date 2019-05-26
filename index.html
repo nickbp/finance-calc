@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<!--
+ Copyright (C) 2015 Nicholas Parker <nickbp@gmail.com>
+ License: GPLv3, see LICENSE file
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+<title>Savings/Loan Calculator</title>
+<style>
+.x.axis .minor {
+  fill: none;
+  stroke: #333;
+}
+
+.x.axis line, .x.axis path, .y.axis line, .y.axis path {
+  fill: none;
+  stroke: #000;
+}
+
+.vallabel {
+  border: 0;
+}
+
+.textfield {
+  width: 100px;
+}
+.slider {
+  margin-left: 10px;
+  width: 500px;
+}
+
+#tabs {
+  background: transparent;
+  border: none;
+}
+#tabs .ui-widget-header {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #CCC;
+  -moz-border-radius: 0px;
+  -webkit-border-radius: 0px;
+  border-radius: 0px;
+}
+#tabs .ui-tabs-nav .ui-state-default {
+  background: transparent;
+  border: none;
+  font-weight: bold;
+}
+#tabs .ui-tabs-nav .ui-state-active {
+  background: transparent url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAN0lEQVR42mNgGAWjgAA4cODAfxAmWzMMkGwIsmaSDcGmmWhD8GkmaAgxmnEaQopmDEPI0YxsCABrFhMgEiBgxwAAAABJRU5ErkJggg==') no-repeat bottom center;
+  border: none;
+}
+#tabs .ui-tabs-nav .ui-state-default a {
+  color: #999;
+}
+#tabs .ui-tabs-nav .ui-state-active a {
+  color: #393;
+}
+
+table {
+  margin: 0 auto 0 auto;
+  align: center;
+}
+</style>
+</head>
+<body>
+  <div id="tabs">
+    <ul>
+      <li><a href="#savings">Savings/Interest Calculator</a></li>
+      <li><a href="#loan">Loan/Affordability Calculator</a></li>
+    </ul>
+    <div id="savings">
+      <div id="savings-viz"></div>
+      <table>
+        <tr>
+          <td><label for="startval">Start Balance:</label></td>
+          <td><input type="radio" class="radio" name="savings-fill" id="savings-radio-startval"
+                     title="Solve for Start Balance" /></td>
+          <td><input type="text" class="textfield" id="savings-text-startval" /></td>
+          <td width="200"><div class="slider" name="startval" id="savings-slider-startval"></div></td>
+        </tr>
+        <tr>
+          <td><label for="depositamount">
+              <select class="combo" id="savings-combo-depositperiod">
+                <option value="monthly">Monthly</option>
+                <option value="annual">Annual</option>
+              </select>
+              Deposit:
+          </label></td>
+          <td><input type="radio" class"radio" name="savings-fill" id="savings-radio-depositamount"
+                     title="Solve for Deposit" /></td>
+          <td><input type="text" class="textfield" id="savings-text-depositamount" /></td>
+          <td><div class="slider" name="depositamount" id="savings-slider-depositamount"></div></td>
+        </tr>
+        <tr>
+          <td><label for="years">Years:</label></td>
+          <td><input type="radio" class"radio" name="savings-fill" id="savings-radio-years"
+                     title="Solve for Years" /></td>
+          <td><input type="text" class="textfield" id="savings-text-years" /></td>
+          <td><div class="slider" name="years" id="savings-slider-years"></div></td>
+        </tr>
+        <tr>
+          <td><label for="interestrate">Expected Return:</label></td>
+          <td><input type="radio" class"radio" name="savings-fill" id="savings-radio-interestrate"
+                     title="Solve for Expected Return" /></td>
+          <td><input type="text" class="textfield" id="savings-text-interestrate" /></td>
+          <td><div class="slider" name="interestrate" id="savings-slider-interestrate"></div></td>
+        </tr>
+        <tr>
+          <td><label for="expenserate">Expense Ratio:</label></td>
+          <td><input type="radio" class"radio" name="savings-fill" id="savings-radio-expenserate"
+                     title="Solve for Expense Ratio" /></td>
+          <td><input type="text" class="textfield" id="savings-text-expenserate" /></td>
+          <td><div class="slider" name="expenserate" id="savings-slider-expenserate"></div></td>
+        </tr>
+        <tr>
+          <td><label for="endval">Final Balance:</label></td>
+          <td><input type="radio" class"radio" name="savings-fill" id="savings-radio-endval" checked="checked"
+                     title="Solve for Final Balance" /></td>
+          <td><input type="text" class="textfield" id="savings-text-endval" /></td>
+          <td><div class="slider" name="endval" id="savings-slider-endval"></div></td>
+        </tr>
+      </table>
+    </div>
+    <div id="loan">
+      <div id="loan-viz"></div>
+      <table>
+        <tr>
+          <td><label for="startval">Loan Value:</label></td>
+          <td><input type="radio" class"radio" name="loan-fill" id="loan-radio-startval"
+                     title="Solve for Loan Value" /></td>
+          <td><input type="text" class="textfield" id="loan-text-startval" /></td>
+          <td width="200"><div class="slider" name="startval" id="loan-slider-startval"></div></td>
+        </tr>
+        <tr>
+          <td><label for="interestrate">Interest Rate:</label></td>
+          <td><input type="radio" class"radio" name="loan-fill" id="loan-radio-interestrate"
+                     title="Solve for Interest Rate" /></td>
+          <td><input type="text" class="textfield" id="loan-text-interestrate" /></td>
+          <td><div class="slider" name="interestrate" id="loan-slider-interestrate"></div></td>
+        </tr>
+        <tr>
+          <td><label for="years">Years:</label></td>
+          <td><input type="radio" class"radio" name="loan-fill" id="loan-radio-years"
+                     title="Solve for Years" /></td>
+          <td><input type="text" class="textfield" id="loan-text-years" /></td>
+          <td><div class="slider" name="years" id="loan-slider-years"></div></td>
+        </tr>
+        <tr>
+          <td><label for="depositamount">
+              <select class="combo" id="loan-combo-depositperiod">
+                <option value="monthly">Monthly</option>
+                <option value="annual">Annual</option>
+              </select>
+              Payment:
+          </label></td>
+          <td><input type="radio" class"radio" name="loan-fill" id="loan-radio-depositamount"
+                     title="Solve for Payment" checked="checked" /></td>
+          <td><input type="text" class="textfield" id="loan-text-depositamount" /></td>
+          <td><div class="slider" name="depositamount" id="loan-slider-depositamount"></div></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  <script src="draw.js"></script>
+</body>
+</html>
